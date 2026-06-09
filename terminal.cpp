@@ -941,6 +941,15 @@ void Terminal::ansiSequence(const QString& seq)
         break;
 
     case 'm': //graphics mode
+        if (!extra.isEmpty()) {
+            // A private-parameter prefix (e.g. '>' in ESC[>4;2m, xterm
+            // XTMODKEYS / modifyOtherKeys) means this is NOT an SGR sequence.
+            // Without this guard its params were fed to handleSGR, so the '4'
+            // in ESC[>4;2m set the underline attribute permanently and every
+            // character rendered underlined (very visible on `claude -r`).
+            unhandled = true;
+            break;
+        }
         if (params.count() == 0)
             params.append(0);
         {
