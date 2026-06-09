@@ -313,8 +313,15 @@ bool Parser::handleSGR(Parser::SGRParserState& state, const QList<int>& params, 
             break;
         }
         default:
-            errorString = QString::fromLatin1("got unknown SGR: %1").arg(p);
-            return false;
+            // Unknown SGR parameter. Per xterm/VT semantics, ignore just this
+            // one parameter and keep processing the rest of the sequence.
+            // Aborting here (the old behaviour) dropped every later parameter,
+            // including bundled resets such as underline-off (24) that follow
+            // an unhandled code (e.g. underline-colour 58/59). Combined with
+            // terminal.cpp applying the partial result unconditionally, that
+            // left underline/bold/inverse stuck on across replayed output.
+            errorString = QString::fromLatin1("ignored unknown SGR: %1").arg(p);
+            break;
         }
     }
 
